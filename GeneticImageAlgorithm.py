@@ -87,7 +87,7 @@ class GeneticImageAlgorithm:
 ###################################################################
 
 # Run main application
-gia = GeneticImageAlgorithm("mona_lisa_small.jpg")
+gia = GeneticImageAlgorithm("mona_lisa_small.png")
 output_pixels = gia.run()
 
 final_pixels = []
