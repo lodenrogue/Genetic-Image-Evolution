@@ -30,27 +30,25 @@ class GeneticImageAlgorithm:
         self.toolbox.register("select", tools.selTournament, tournsize=3)
 
     def run(self):
-        width = self.target_image.size[0]
-        height = self.target_image.size[1]
-
+        width, height = self.target_image.size
         result_pixels = []
 
         pixel_count = 1
-        for y in range(0, height):
-            for x in range(0, width):
+        for y in range(height):
+            for x in range(width):
                 print("Evolving pixel %s of %s" % (pixel_count, width * height))
                 pixel_count += 1
 
                 self.current_pixel = [x, y]
 
                 pop = self.toolbox.population(n=10)
-                hof = tools.HallOfFame(1)
+                hof = tools.HallOfFame(maxsize=1)
                 stats = tools.Statistics(lambda ind: ind.fitness.values)
                 stats.register("min", np.min)
 
-                algorithms.eaSimple(pop, self.toolbox, cxpb=0.5, mutpb=0.2,
-                                    ngen=50, stats=stats, halloffame=hof,
-                                    verbose=False)
+                algorithms.eaSimple(population=pop, toolbox=self.toolbox,
+                                    cxpb=0.5, mutpb=0.2, ngen=50, stats=stats,
+                                    halloffame=hof, verbose=False)
 
                 result_pixels.append(hof[0])
 
@@ -62,42 +60,35 @@ class GeneticImageAlgorithm:
 
     # Score individual fitness
     def __get_fitness(self, individual):
-        current_x = self.current_pixel[0]
-        current_y = self.current_pixel[1]
+        current_x, current_y = self.current_pixel
 
         tr, tg, tb = self.pix[current_x, current_y]
-        ir = individual[0]
-        ig = individual[1]
-        ib = individual[2]
+        ir, ig, ib = tuple(individual)
 
         fitness = abs(tr - ir) + abs(tg - ig) + abs(tb - ib)
         return fitness,
 
     # Mutate genes
     def __mutate(self, individual, indpb):
-        for i in range(0, len(individual)):
-            mut_prob = random.random()
-
-            if mut_prob <= indpb:
-                individual[i] = self.__create_value()
-
+        for i in range(len(individual)):
+            individual[i] = self.__create_value() if random.random() <= indpb else individual[i]
         return individual,
 
 
 ###################################################################
 
 # Run main application
-gia = GeneticImageAlgorithm("mona_lisa_small.png")
+gia = GeneticImageAlgorithm(image_name="mona_lisa_xs.png")
 output_pixels = gia.run()
 
 final_pixels = []
 print("Converting to image format")
-for x in range(0, len(output_pixels)):
-    final_pixels.append(tuple(output_pixels[x]))
+for pix in output_pixels:
+    final_pixels.append(tuple(pix))
 
-result = Image.new(gia.target_image.mode, gia.target_image.size)
-result.putdata(final_pixels)
-result.save("result.png")
+result = Image.new(mode=gia.target_image.mode, size=gia.target_image.size)
+result.putdata(data=final_pixels)
+result.save("result_test.png")
 result.show()
 
 ###################################################################
